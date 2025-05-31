@@ -1,0 +1,37 @@
+--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
+local replicated_storage = game:GetService("ReplicatedStorage")
+local local_player = game:GetService("Players").LocalPlayer
+local workspace = game:GetService("Workspace")
+
+--// you can remove this and the current damage function and set it to 9e9
+local player_stats = require(local_player:FindFirstChild("plrStats"))
+
+getgenv().settings = {
+    enabled = true,
+    max_distance = 20, -- idk whats max on how far you can hit them so mess around w it
+    delay = 0 -- delay to hitting nearby enemies
+}
+getgenv().kill_aura = true
+
+function current_damage()
+    local damage = 0
+    for i, v in next, player_stats.wpnStats do
+        if i == "Dmg" and v > damage then
+            damage = v
+        end
+    end
+    return damage
+end
+
+if settings.enabled then
+    repeat
+        for _, v in next, workspace:GetChildren() do
+            if v ~= local_player.Character and v:IsA("Model") and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 and (v:GetPivot().Position - local_player.Character:GetPivot().Position).magnitude < settings.max_distance then
+                replicated_storage:WaitForChild("remotes"):WaitForChild("onHit"):FireServer(v.Humanoid, current_damage(), {}, 0)
+            end
+        end
+        task.wait(settings.delay)
+    until not settings.enabled
+end
